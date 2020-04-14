@@ -79,7 +79,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                     var arguments = new List<SqlExpression>();
                     foreach (var arg in queryableFunctionQueryRootExpression.Arguments)
                     {
-                        var sqlArgument = _sqlTranslator.Translate(arg);
+                        var sqlArgument = TranslateExpression(arg);
                         if (sqlArgument == null)
                         {
                             var methodCall = Expression.Call(
@@ -435,7 +435,7 @@ namespace Microsoft.EntityFrameworkCore.Query
                     return memberInitExpression.Update(updatedNewExpression, newBindings);
 
                 default:
-                    var translation = _sqlTranslator.Translate(expression);
+                    var translation = TranslateExpression(expression);
                     if (translation == null)
                     {
                         return null;
@@ -1053,7 +1053,16 @@ namespace Microsoft.EntityFrameworkCore.Query
             return source;
         }
 
-        private SqlExpression TranslateExpression(Expression expression) => _sqlTranslator.Translate(expression);
+        private SqlExpression TranslateExpression(Expression expression)
+        {
+            var result = _sqlTranslator.Translate(expression);
+            if (!string.IsNullOrEmpty(_sqlTranslator.TranslationErrorDetails))
+            {
+                TranslationErrorDetails = _sqlTranslator.TranslationErrorDetails;
+            }
+
+            return result;
+        }
 
         private SqlExpression TranslateLambdaExpression(
             ShapedQueryExpression shapedQueryExpression, LambdaExpression lambdaExpression)

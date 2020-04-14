@@ -32,6 +32,8 @@ namespace Microsoft.EntityFrameworkCore.Query
 
         protected virtual QueryableMethodTranslatingExpressionVisitorDependencies Dependencies { get; }
 
+        public virtual string TranslationErrorDetails { get; [param: NotNull] protected set; }
+
         protected override Expression VisitExtension(Expression extensionExpression)
         {
             Check.NotNull(extensionExpression, nameof(extensionExpression));
@@ -50,7 +52,22 @@ namespace Microsoft.EntityFrameworkCore.Query
 
             ShapedQueryExpression CheckTranslated(ShapedQueryExpression translated)
             {
-                return translated ?? throw new InvalidOperationException(CoreStrings.TranslationFailed(methodCallExpression.Print()));
+                if (translated != null)
+                {
+                    return translated;
+                }
+
+                if (!string.IsNullOrEmpty(TranslationErrorDetails))
+                {
+                    throw new InvalidOperationException(
+                        CoreStrings.TranslationFailedWithDetails(
+                            methodCallExpression.Print(),
+                            TranslationErrorDetails));
+                }
+                else
+                {
+                    throw new InvalidOperationException(CoreStrings.TranslationFailed(methodCallExpression.Print()));
+                }
             }
 
             var method = methodCallExpression.Method;

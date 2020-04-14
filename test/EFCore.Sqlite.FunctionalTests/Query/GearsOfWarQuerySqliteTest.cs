@@ -1,7 +1,9 @@
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -17,43 +19,66 @@ namespace Microsoft.EntityFrameworkCore.Query
         }
 
         public override Task Where_datetimeoffset_date_component(bool async)
-            => AssertTranslationFailed(() => base.Where_datetimeoffset_date_component(async));
+            => AssertTranslationFailedWithDetails(
+                () => base.Where_datetimeoffset_date_component(async),
+                CoreStrings.QueryUnableToTranslateMember(nameof(DateTimeOffset.Date), nameof(DateTimeOffset)));
 
         public override Task Where_datetimeoffset_day_component(bool async)
-            => AssertTranslationFailed(() => base.Where_datetimeoffset_date_component(async));
+            => AssertTranslationFailedWithDetails(
+                () => base.Where_datetimeoffset_date_component(async),
+                CoreStrings.QueryUnableToTranslateMember(nameof(DateTimeOffset.Date), nameof(DateTimeOffset)));
 
         public override Task Where_datetimeoffset_dayofyear_component(bool async)
-            => AssertTranslationFailed(() => base.Where_datetimeoffset_dayofyear_component(async));
+            => AssertTranslationFailedWithDetails(
+                () => base.Where_datetimeoffset_dayofyear_component(async),
+                CoreStrings.QueryUnableToTranslateMember(nameof(DateTimeOffset.DayOfYear), nameof(DateTimeOffset)));
 
         public override Task Where_datetimeoffset_hour_component(bool async)
-            => AssertTranslationFailed(() => base.Where_datetimeoffset_hour_component(async));
+            => AssertTranslationFailedWithDetails(
+                () => base.Where_datetimeoffset_hour_component(async),
+                CoreStrings.QueryUnableToTranslateMember(nameof(DateTimeOffset.Hour), nameof(DateTimeOffset)));
 
         public override Task Where_datetimeoffset_millisecond_component(bool async)
-            => AssertTranslationFailed(() => base.Where_datetimeoffset_millisecond_component(async));
+            => AssertTranslationFailedWithDetails(
+                () => base.Where_datetimeoffset_millisecond_component(async),
+                CoreStrings.QueryUnableToTranslateMember(nameof(DateTimeOffset.Millisecond), nameof(DateTimeOffset)));
 
         public override Task Where_datetimeoffset_minute_component(bool async)
-            => AssertTranslationFailed(() => base.Where_datetimeoffset_minute_component(async));
+            => AssertTranslationFailedWithDetails(
+                () => base.Where_datetimeoffset_minute_component(async),
+                CoreStrings.QueryUnableToTranslateMember(nameof(DateTimeOffset.Minute), nameof(DateTimeOffset)));
 
         public override Task Where_datetimeoffset_month_component(bool async)
-            => AssertTranslationFailed(() => base.Where_datetimeoffset_month_component(async));
+            => AssertTranslationFailedWithDetails(
+                () => base.Where_datetimeoffset_month_component(async),
+                CoreStrings.QueryUnableToTranslateMember(nameof(DateTimeOffset.Month), nameof(DateTimeOffset)));
 
         public override Task Where_datetimeoffset_now(bool async)
             => AssertTranslationFailed(() => base.Where_datetimeoffset_now(async));
 
         public override Task Where_datetimeoffset_second_component(bool async)
-            => AssertTranslationFailed(() => base.Where_datetimeoffset_second_component(async));
+            => AssertTranslationFailedWithDetails(
+                () => base.Where_datetimeoffset_second_component(async),
+                CoreStrings.QueryUnableToTranslateMember(nameof(DateTimeOffset.Second), nameof(DateTimeOffset)));
 
         public override Task Where_datetimeoffset_utcnow(bool async)
-            => AssertTranslationFailed(() => base.Where_datetimeoffset_utcnow(async));
+            => AssertTranslationFailed(
+                () => base.Where_datetimeoffset_utcnow(async));
 
         public override Task Where_datetimeoffset_year_component(bool async)
-            => AssertTranslationFailed(() => base.Where_datetimeoffset_year_component(async));
+            => AssertTranslationFailedWithDetails(
+                () => base.Where_datetimeoffset_year_component(async),
+                CoreStrings.QueryUnableToTranslateMember(nameof(DateTimeOffset.Year), nameof(DateTimeOffset)));
 
         public override Task DateTimeOffset_Contains_Less_than_Greater_than(bool async)
-            => AssertTranslationFailed(() => base.DateTimeOffset_Contains_Less_than_Greater_than(async));
+            => AssertTranslationFailedWithDetails(
+                () => base.DateTimeOffset_Contains_Less_than_Greater_than(async),
+                CoreStrings.QueryUnableToTranslateMember(nameof(DateTimeOffset.Date), nameof(DateTimeOffset)));
 
         public override Task DateTimeOffset_Date_returns_datetime(bool async)
-            => AssertTranslationFailed(() => base.DateTimeOffset_Date_returns_datetime(async));
+            => AssertTranslationFailedWithDetails(
+                () => base.DateTimeOffset_Date_returns_datetime(async),
+                CoreStrings.QueryUnableToTranslateMember(nameof(DateTimeOffset.Date), nameof(DateTimeOffset)));
 
         // Sqlite does not support cross/outer apply
         public override Task Correlated_collections_inner_subquery_predicate_references_outer_qsre(bool async) => null;

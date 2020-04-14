@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.TestModels.Northwind;
 using Microsoft.EntityFrameworkCore.TestUtilities;
 using Xunit;
@@ -229,15 +230,16 @@ namespace Microsoft.EntityFrameworkCore.Query
 
         [ConditionalTheory]
         [MemberData(nameof(IsAsyncData))]
-        public virtual Task Select_bool_closure_with_order_by_property_with_cast_to_nullable(bool async)
+        public virtual async Task Select_bool_closure_with_order_by_property_with_cast_to_nullable(bool async)
         {
             var boolean = false;
-
-            return AssertTranslationFailed(
-                () => AssertQuery(
+            var message = (await Assert.ThrowsAsync<InvalidOperationException>(
+                    () => AssertQuery(
                     async,
                     ss => ss.Set<Customer>().Select(c => new { f = boolean }).OrderBy(e => (bool?)e.f),
-                    assertOrder: true));
+                    assertOrder: true))).Message;
+
+            Assert.Contains(CoreStrings.QueryUnableToTranslateMember("f", "").Substring(0, 35), message);
         }
 
         [ConditionalTheory]

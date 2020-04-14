@@ -351,7 +351,7 @@ namespace Microsoft.EntityFrameworkCore.InMemory.Query.Internal
                     return memberInitExpression.Update(updatedNewExpression, newBindings);
 
                 default:
-                    var translation = _expressionTranslator.Translate(expression);
+                    var translation = TranslateExpression(expression);
                     if (translation == null)
                     {
                         return null;
@@ -950,6 +950,10 @@ namespace Microsoft.EntityFrameworkCore.InMemory.Query.Internal
         private Expression TranslateExpression(Expression expression, bool preserveType = false)
         {
             var result = _expressionTranslator.Translate(expression);
+            if (!string.IsNullOrEmpty(_expressionTranslator.TranslationErrorDetails))
+            {
+                TranslationErrorDetails = _expressionTranslator.TranslationErrorDetails;
+            }
 
             if (expression != null
                 && result != null
@@ -998,6 +1002,8 @@ namespace Microsoft.EntityFrameworkCore.InMemory.Query.Internal
             {
                 _expressionTranslator = expressionTranslator;
             }
+
+            public string TranslationErrorDetails => _expressionTranslator.TranslationErrorDetails;
 
             public Expression Expand(InMemoryQueryExpression queryExpression, Expression lambdaBody)
             {

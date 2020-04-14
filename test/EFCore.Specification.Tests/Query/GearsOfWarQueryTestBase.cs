@@ -1563,12 +1563,13 @@ namespace Microsoft.EntityFrameworkCore.Query
         [MemberData(nameof(IsAsyncData))]
         public virtual Task Select_Where_Navigation_Client(bool async)
         {
-            return AssertTranslationFailed(
+            return AssertTranslationFailedWithDetails(
                 () => AssertQuery(
                     async,
                     ss => from t in ss.Set<CogTag>()
                           where t.Gear != null && t.Gear.IsMarcus
-                          select t));
+                          select t),
+                CoreStrings.QueryUnableToTranslateMember(nameof(Gear.IsMarcus), nameof(Gear)));
         }
 
         [ConditionalTheory]
@@ -7467,6 +7468,51 @@ namespace Microsoft.EntityFrameworkCore.Query
                     .OrderBy(g => g.Nickname)
                     .Take(1)
                     .Select(g => g.Rank & MilitaryRank.Private));
+        }
+
+        [ConditionalTheory]
+        [MemberData(nameof(IsAsyncData))]
+        public virtual async Task Trying_to_access_unmapped_property_throws_informative_error(bool async)
+        {
+            var message = (await Assert.ThrowsAsync<InvalidOperationException>(
+                () => AssertQuery(
+                    async,
+                    ss => ss.Set<Gear>().Where(g => g.IsMarcus)))).Message;
+
+            Assert.Contains(CoreStrings.QueryUnableToTranslateMember(nameof(Gear.IsMarcus), nameof(Gear)), message);
+        }
+
+        [ConditionalTheory]
+        [MemberData(nameof(IsAsyncData))]
+        public virtual async Task Using_string_Equals_with_StringComparison_throws_informative_error(bool async)
+        {
+            var message = (await Assert.ThrowsAsync<InvalidOperationException>(
+                () => AssertQuery(
+                    async,
+                    ss => ss.Set<Gear>().Where(g => g.CityOfBirthName.Equals("Ephyra", StringComparison.InvariantCulture))))).Message;
+
+            Assert.Contains(CoreStrings.QueryUnableToTranslateStringEqualsWithStringComparison, message);
+        }
+
+        [ConditionalTheory]
+        [MemberData(nameof(IsAsyncData))]
+        public virtual Task Trying_to_access_unmapped_property_in_projection(bool async)
+        {
+            return AssertQueryScalar(
+                async,
+                ss => ss.Set<Gear>().Select(g => g.IsMarcus));
+        }
+
+        [ConditionalTheory]
+        [MemberData(nameof(IsAsyncData))]
+        public virtual async Task Client_projection_with_nested_unmapped_property_bubbles_up_translation_failure_info(bool async)
+        {
+            var message = (await Assert.ThrowsAsync<InvalidOperationException>(
+                () => AssertQuery(
+                async,
+                ss => ss.Set<Gear>().Select(g => new { nested = ss.Set<Gear>().Where(gg => gg.IsMarcus).ToList() })))).Message;
+
+            Assert.Contains(CoreStrings.QueryUnableToTranslateMember(nameof(Gear.IsMarcus), nameof(Gear)), message);
         }
 
         protected GearsOfWarContext CreateContext() => Fixture.CreateContext();

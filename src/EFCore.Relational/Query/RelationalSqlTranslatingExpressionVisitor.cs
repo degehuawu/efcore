@@ -26,6 +26,11 @@ namespace Microsoft.EntityFrameworkCore.Query
         private static readonly MethodInfo _parameterListValueExtractor =
             typeof(RelationalSqlTranslatingExpressionVisitor).GetTypeInfo().GetDeclaredMethod(nameof(ParameterListValueExtractor));
 
+        private static readonly MethodInfo _stringEqualsWithStringComparison
+            = typeof(string).GetRuntimeMethod(nameof(string.Equals), new[] { typeof(string), typeof(StringComparison) });
+        private static readonly MethodInfo _stringEqualsWithStringComparisonStatic
+            = typeof(string).GetRuntimeMethod(nameof(string.Equals), new[] { typeof(string), typeof(string), typeof(StringComparison) });
+
         private readonly QueryCompilationContext _queryCompilationContext;
         private readonly IModel _model;
         private readonly ISqlExpressionFactory _sqlExpressionFactory;
@@ -49,12 +54,21 @@ namespace Microsoft.EntityFrameworkCore.Query
             _sqlTypeMappingVerifyingExpressionVisitor = new SqlTypeMappingVerifyingExpressionVisitor();
         }
 
+        public virtual string TranslationErrorDetails { get; [param: NotNull] protected set; }
+
         protected virtual RelationalSqlTranslatingExpressionVisitorDependencies Dependencies { get; }
 
         public virtual SqlExpression Translate([NotNull] Expression expression)
         {
             Check.NotNull(expression, nameof(expression));
 
+            TranslationErrorDetails = string.Empty;
+
+            return TranslateInternal(expression);
+        }
+
+        private SqlExpression TranslateInternal(Expression expression)
+        {
             var result = Visit(expression);
 
             if (result is SqlExpression translation)
@@ -88,7 +102,7 @@ namespace Microsoft.EntityFrameworkCore.Query
 
             if (!(expression is SqlExpression sqlExpression))
             {
-                sqlExpression = Translate(expression);
+                sqlExpression = TranslateInternal(expression);
             }
 
             if (sqlExpression == null)
@@ -163,7 +177,7 @@ namespace Microsoft.EntityFrameworkCore.Query
 
             if (!(expression is SqlExpression sqlExpression))
             {
-                sqlExpression = Translate(expression);
+                sqlExpression = TranslateInternal(expression);
             }
 
             return sqlExpression != null
@@ -183,7 +197,7 @@ namespace Microsoft.EntityFrameworkCore.Query
 
             if (!(expression is SqlExpression sqlExpression))
             {
-                sqlExpression = Translate(expression);
+                sqlExpression = TranslateInternal(expression);
             }
 
             return sqlExpression != null
@@ -203,7 +217,7 @@ namespace Microsoft.EntityFrameworkCore.Query
 
             if (!(expression is SqlExpression sqlExpression))
             {
-                sqlExpression = Translate(expression);
+                sqlExpression = TranslateInternal(expression);
             }
 
             if (sqlExpression == null)
@@ -330,10 +344,22 @@ namespace Microsoft.EntityFrameworkCore.Query
 
             var innerExpression = Visit(memberExpression.Expression);
 
-            return TryBindMember(innerExpression, MemberIdentity.Create(memberExpression.Member))
-                ?? (TranslationFailed(memberExpression.Expression, Visit(memberExpression.Expression), out var sqlInnerExpression)
-                    ? null
-                    : Dependencies.MemberTranslatorProvider.Translate(sqlInnerExpression, memberExpression.Member, memberExpression.Type));
+            var binding = TryBindMember(innerExpression, MemberIdentity.Create(memberExpression.Member));
+            if (binding != null)
+            {
+                return binding;
+            }
+
+            if (innerExpression != null)
+            {
+                TranslationErrorDetails = CoreStrings.QueryUnableToTranslateMember(
+                        memberExpression.Member.Name,
+                        memberExpression.Member.DeclaringType.ShortDisplayName());
+            }
+
+            return TranslationFailed(memberExpression.Expression, Visit(memberExpression.Expression), out var sqlInnerExpression)
+                ? null
+                : Dependencies.MemberTranslatorProvider.Translate(sqlInnerExpression, memberExpression.Member, memberExpression.Type);
         }
 
         protected override Expression VisitMemberInit(MemberInitExpression memberInitExpression)
@@ -552,6 +578,12 @@ namespace Microsoft.EntityFrameworkCore.Query
                     }
 
                     arguments[i] = sqlArgument;
+                }
+
+                if (methodCallExpression.Method == _stringEqualsWithStringComparison
+                    || methodCallExpression.Method == _stringEqualsWithStringComparisonStatic)
+                {
+                    TranslationErrorDetails = CoreStrings.QueryUnableToTranslateStringEqualsWithStringComparison;
                 }
             }
 

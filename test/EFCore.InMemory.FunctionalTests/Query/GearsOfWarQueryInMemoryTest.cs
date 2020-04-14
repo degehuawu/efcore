@@ -88,5 +88,11 @@ namespace Microsoft.EntityFrameworkCore.Query
         {
             return base.Enum_closure_typed_as_underlying_type_generates_correct_parameter_type(async);
         }
+
+        [ConditionalTheory(Skip = "issue #17386")]
+        public override Task Using_string_Equals_with_StringComparison_throws_informative_error(bool async)
+        {
+            return base.Using_string_Equals_with_StringComparison_throws_informative_error(async);
+        }
     }
 }

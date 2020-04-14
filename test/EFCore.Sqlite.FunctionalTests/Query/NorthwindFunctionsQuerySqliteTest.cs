@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.TestUtilities;
 using Xunit.Abstractions;
 
@@ -47,7 +48,9 @@ namespace Microsoft.EntityFrameworkCore.Query
             => AssertTranslationFailed(() => base.Projecting_Math_Truncate_and_ordering_by_it_twice3(async));
 
         public override Task Where_functions_nested(bool async)
-            => AssertTranslationFailed(() => base.Where_functions_nested(async));
+            => AssertTranslationFailedWithDetails(
+                () => base.Where_functions_nested(async),
+                CoreStrings.QueryUnableToTranslateMember(nameof(string.Length), "string"));
 
         public override Task Where_guid_newguid(bool async)
             => AssertTranslationFailed(() => base.Where_guid_newguid(async));
